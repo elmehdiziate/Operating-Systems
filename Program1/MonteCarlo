@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]){
 
@@ -7,13 +8,31 @@ int main(int argc, char *argv[]){
 
     // check if the number of arguments passed is correct
     if(argc != 3){
-        printf("Usage: %s <file name> <number of processes>\n", argv[0]);
+        printf("Usage: %s <file path> <number of processes>\n", argv[0]);
         return 1;
     }
 
     else{
         strcpy(file_path, argv[1]);
-        printf("%s",file_path);
     }
+
+    int number_processes= atoi(argv[2]);
+    int total_points = 0;
+
+    FILE *points = fopen(file_path, "r");  
+    // check if file is opened
+    if(points = NULL){
+        printf("Error: Unable to open file %s\n", file_path);
+        return 1;
+    } 
+
+    // check if the format of the file is valid
+    if(fscanf(points, "%d", &total_points) != 1){
+        printf("Error: Invalid file format\n");
+        fclose(points);
+        return 1;
+    }
+    
+
 
 }
