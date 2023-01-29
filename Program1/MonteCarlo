@@ -1,0 +1,19 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char *argv[]){
+
+    char file_path[100];
+
+    // check if the number of arguments passed is correct
+    if(argc != 3){
+        printf("Usage: %s <file name> <number of processes>\n", argv[0]);
+        return 1;
+    }
+
+    else{
+        strcpy(file_path, argv[1]);
+        printf("%s",file_path);
+    }
+
+}
