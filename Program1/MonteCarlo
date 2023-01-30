@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 
     FILE *points = fopen(file_path, "r");  
     // check if file is opened
-    if(points = NULL){
+    if(points == NULL){
         printf("Error: Unable to open file %s\n", file_path);
         return 1;
     } 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     int pipefd[2];
     if (pipe(pipefd) == -1) {
         printf("Error: Unable to create pipe\n");
-        fclose(fp);
+        fclose(points);
         return 1;
     }
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]){
 
         // Make the child process
         pid_t pid = fork();
-        if(pid > 0){
+        if(pid < 0){
             printf("Error: Unable to create child process\n");
             fclose(points);
             return 1;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
         else if(pid == 0){
 
             // The child does not need the reading end of the pipe
-            close(pfd[0]);
+            close(pipefd[0]);
 
             float x,y;
             int process_points_in_circle = 0;
@@ -72,17 +72,20 @@ int main(int argc, char *argv[]){
                 points_per_process ++;
             }
 
-            for (int j = 0; i < points_per_process; j++){
+            for (int j = 0; j < points_per_process; j++){
 
                 // Check if the format of the file is valid (x,y)
-                if(fscanf(points, "%f %f" , &x,&y) != 2){
+                if(!feof(points)){
+                    if(fscanf(points, "%f %f" , &x,&y) != 2){
                     printf("Error: Invalid file format\n");
-                    fclose(fp);
+                    fclose(points);
                     return 1;
                 }
+                }
+                
 
                 // Check if the points are in the circle
-                if(x*x + y*y == 1){
+                if(x*x + y*y <= 1){
                     process_points_in_circle++;
                 }
 
@@ -93,19 +96,25 @@ int main(int argc, char *argv[]){
         }
 
     }
+
     // The parent does not need the writing end of the pipe
-    close(pfd[1]);
+    close(pipefd[1]);
+
+    for (int i = 0; i < number_processes; i++) {
+        wait(0);
+    }
+    
     for(int i=0; i < number_processes; i++){
         int process_points_in_circle;
         read(pipefd[0] , &process_points_in_circle, sizeof(process_points_in_circle));
         total_points_in_circle += process_points_in_circle;
     }
 
-    close(pfd[0]); 
+    close(pipefd[0]); 
 
     // Calculate and print approximation of pi
-    float pi = 4.0 * pointsInCircle / totalPoints;
+    float pi = 4.0 * total_points_in_circle / total_points;
     printf("Approximation of pi: %f\n", pi);
-    fclose(fp);
+    fclose(points);
     return 0;
 }
