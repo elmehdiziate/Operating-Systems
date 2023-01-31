@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
             int reminder = total_points % number_processes;
             int start = processed_points;
 
-            // Check if there is any left points after division : remainder = totalPoints % numProcesses != 0
+            // Check if there is any left points after division : reminder = totalPoints % numProcesses != 0
             if (i < reminder)
             {
                 // Add a point to the points_per_process
