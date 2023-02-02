@@ -7,15 +7,25 @@ class ThreadedMonteCarlo {
     private static int numPoints;  // number of points (first line of the file)
     private static float[][] points; // 2D array to store the cordinates (x,y) of the points
     private static int numInCircle = 0; // number of points that fall inside the circle
-
+    private static final int Default_Num_Threads = 4;
+    private static final String Default_fileName = "samplePoint.txt";
     public static void main(String[] args) throws IOException, InterruptedException {
-        // check if the number of argumnets passed is equal to two (filename and number of threads)
-        if (args.length != 2) {
-            System.out.println("Usage: java ThreadedMonteCarlo <file name> <number of threads>");
-            System.exit(1);
+        // check if the number of argumnets passed 
+        String fileName = "" ;
+        if (args.length == 2) {
+            NUM_THREADS = Integer.parseInt(args[1]);
+            fileName = args[0];
         }
-        String fileName = args[0];
-        NUM_THREADS = Integer.parseInt(args[1]);
+        else if (args.length == 1){
+            NUM_THREADS = Default_Num_Threads;
+            fileName = args[0];
+        }
+        else{
+            NUM_THREADS = Default_Num_Threads;
+            fileName = Default_fileName;
+        }
+        
+        
         points = readFile(fileName);
 
         // if the file has an invalid format (number of lines not equal to number of lines)
