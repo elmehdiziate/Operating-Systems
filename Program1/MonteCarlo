@@ -1,26 +1,33 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
+#define FILE_PATH "points.txt"
+#define NUMBER_PROCESSES 4
 int main(int argc, char *argv[])
 {
 
     char file_path[100];
-
-    // check if the number of arguments passed is correct
-    if (argc != 3)
-    {
-        printf("Usage: %s <file path> <number of processes>\n", argv[0]);
-        return 1;
-    }
-
-    else
+    int number_processes;
+    // check if the number of arguments for different cases
+    if (argc == 3)
     {
         strcpy(file_path, argv[1]);
+        number_processes = atoi(argv[2]);
+    }
+    else if (argc == 2)
+    {
+        strcpy(file_path, argv[1]);
+        number_processes = NUMBER_PROCESSES;
+    }
+    else
+    {
+        strcpy(file_path, FILE_PATH);
+        number_processes = NUMBER_PROCESSES;
     }
 
-    int number_processes = atoi(argv[2]);
     int total_points = 0;
     int count = 0;
     int total_points_in_circle = 0;
@@ -93,7 +100,8 @@ int main(int argc, char *argv[])
             int reminder = total_points % number_processes;
             int start = processed_points;
 
-            // Check if there is any left points after division : reminder = totalPoints % numProcesses != 0
+            // Check if there is any left points after division : reminder =
+            // totalPoints % numProcesses != 0
             if (i < reminder)
             {
                 // Add a point to the points_per_process
@@ -115,7 +123,8 @@ int main(int argc, char *argv[])
             }
 
             // Send the total_points_in_circle for each process to the parent
-            write(pipefd[1], &process_points_in_circle, sizeof(process_points_in_circle));
+            write(pipefd[1], &process_points_in_circle,
+                  sizeof(process_points_in_circle));
             close(pipefd[1]);
             return 0;
         }
@@ -134,7 +143,8 @@ int main(int argc, char *argv[])
     for (int i = 0; i < number_processes; i++)
     {
         int process_points_in_circle;
-        read(pipefd[0], &process_points_in_circle, sizeof(process_points_in_circle));
+        read(pipefd[0], &process_points_in_circle,
+             sizeof(process_points_in_circle));
         total_points_in_circle += process_points_in_circle;
     }
 
