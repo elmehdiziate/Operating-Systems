@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     int n = 0;
     int processed_points = 0;
     FILE *points = fopen(file_path, "r");
-    float pts[1000][2];
+    float pts[100000][2];
 
     // check if file is opened
     if (points == NULL)
