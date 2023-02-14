@@ -116,10 +116,12 @@ class ThreadedMonteCarlo {
                 // Store the x and y coordinate of the current point
                 float x = points[i][0];
                 float y = points[i][1];
-
+                //System.out.println(x+y);
                 // Check if the point lies within the unit circle
                 if (x * x + y * y <= 1.0f) {
-                    numInCircle++;
+                    synchronized (ThreadedMonteCarlo.class) {
+                        numInCircle++;
+                    }
                 }
             }
         }
