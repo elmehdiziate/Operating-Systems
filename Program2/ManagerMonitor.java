@@ -64,9 +64,10 @@ class Manager {
                 // Take picture with
                 synchronized (line) {
                     if (numFansInLine < MIN_FANS) {
+                        // If there are not enough fans in line, the celebrity waits
                         try {
                             line.wait();
-                            checkCelebrityOK();
+                            checkCelebrityOK(); // Check if the celebrity was awakened at the right time
                         } catch (InterruptedException e) {
                             e.getCause();
                             System.exit(1);
@@ -82,6 +83,7 @@ class Manager {
                     }
                     // Adjust the numFans variable
                     numFansInLine -= MIN_FANS;
+                    // notify all fan threads that there are free spots so they can enter the line
                     line.notifyAll();
                 }
 
@@ -140,9 +142,10 @@ class Manager {
                 System.exit(1);
             }
             synchronized (line) {
-                // Get in line
+                // Check if the line is full
                 if (numFansInLine == MAX_ALLOWED_IN_QUEUE) {
                     try {
+                        // The Fan thread should wait to enter the thread
                         line.wait();
                     } catch (InterruptedException e) {
                         e.getCause();
@@ -150,9 +153,11 @@ class Manager {
                     }
 
                 }
+                // get in line
                 System.out.println(Thread.currentThread() + ": gets in line");
                 line.add(0, this);
                 numFansInLine++;
+                // if the number of fans exceed the minimum number call the celebrity thread
                 if (numFansInLine >= MIN_FANS) {
                     line.notify();
                 }
