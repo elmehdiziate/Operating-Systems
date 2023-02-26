@@ -1,6 +1,7 @@
 import java.util.Date;
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.concurrent.*;
 
 public class Manager {
 
@@ -25,8 +26,18 @@ public class Manager {
 	// The current number of fans in line
 	private static int numFansInLine = 0;
 
+	// Semaphore to Keep track of empty spots 
+    private static Semaphore lineEmpty = new Semaphore(MAX_ALLOWED_IN_QUEUE);
+
+    // Semaphore to keep track of full slots
+    private static Semaphore lineFull = new Semaphore(0);
+
+    // Mutex semaphore for accessing shared variables
+    private static Semaphore mutex = new Semaphore(1);
+
 	// For generating random times
     private Random rndGen = new Random(new Date().getTime());
+    private Object rndLock = new Object();
 
 	public static void main(String[] args) {
 		new Manager().go();
@@ -43,7 +54,10 @@ public class Manager {
         while (true) {
             new Thread(new Fan(), "Fan " + i++).start();
             try {
-                Thread.sleep(rndGen.nextInt(MAX_TIME_IN_BETWEEN_ARRIVALS));
+                synchronized (rndLock) {
+                    int randomTime = rndGen.nextInt(MAX_TIME_IN_BETWEEN_ARRIVALS);
+                    Thread.sleep(randomTime);
+				}
             } catch (InterruptedException e) {
             	System.err.println(e.toString());
             	System.exit(1);
@@ -58,25 +72,45 @@ public class Manager {
 		public void run() {
 			while (true)
 			{
+				try{
+					// Wait for enough fans to be in line before taking a picture (this will require 3 full spots at least)
+					lineFull.acquire(MIN_FANS);
+				}catch(InterruptedException e){
+
+				}
 				// Check to see if celebrity flips out
 				checkCelebrityOK();
 
+
 				// Take picture with fans
+				try{
+					// Acquire the mutex to access the shared variable line and numFanInLine
+					mutex.acquire();
+					System.out.println("Celebrity takes a picture with fans");
 
-				System.out.println("Celebrity takes a picture with fans");
+					// Remove the fans from the line
+					for (int i = 0; i < MIN_FANS; i++) {
+						System.out.println(line.remove(0).getName() + ": OMG! Thank you!");
+					}
+					// Adjust the numFans variable
+					numFansInLine-= MIN_FANS;
+				}catch(InterruptedException e){
 
-				// Remove the fans from the line
-				for (int i = 0; i < MIN_FANS; i++) {
-					System.out.println(line.remove(0).getName() + ": OMG! Thank you!");
+				}finally{
+					// Release the mutex and lineEmpty semaphores (it releases 3 spots since it romoved 3 fans)
+					mutex.release();
+					lineEmpty.release(MIN_FANS);
 				}
+				
 
-				// Adjust the numFans variable
-				numFansInLine-= MIN_FANS;
+				
 
 				// Take a break
                 try {
-                    Thread.sleep(rndGen
-                            .nextInt(MAX_BREAK_TIME));
+                    synchronized (rndLock) {
+						int randomTime = rndGen.nextInt(MAX_BREAK_TIME);
+						Thread.sleep(randomTime);
+					}
                 } catch (InterruptedException e) {
                 	System.err.println(e.toString());
                 	System.exit(1);
@@ -89,6 +123,11 @@ public class Manager {
 
 	public void checkCelebrityOK()
 	{
+		try{
+			mutex.acquire();
+		}catch(InterruptedException e){
+
+		}
 		if (numFansInLine > MAX_ALLOWED_IN_QUEUE)
 		{
 			System.err.println("Celebrity becomes claustrophobic and flips out");
@@ -100,6 +139,7 @@ public class Manager {
 			System.err.println("Celebrity becomes enraged that he was woken from nap for too few fans");
 			System.exit(1);
 		}
+		mutex.release();
 	}
 
 	class Fan implements Runnable
@@ -118,16 +158,37 @@ public class Manager {
 
 			// Look in the exhibit for a little while
 	          try {
-	                Thread.sleep(rndGen.nextInt(MAX_EXHIBIT_TIME));
+				synchronized (rndLock) {
+                    int randomTime = rndGen.nextInt(MAX_EXHIBIT_TIME);
+                    Thread.sleep(randomTime);
+				}
 	            } catch (InterruptedException e) {
 	            	System.err.println(e.toString());
 	            	System.exit(1);
 	            }
 
+
 	          // Get in line
-	          System.out.println(Thread.currentThread() + ": gets in line");
-	          line.add(0, this);
-	           numFansInLine++;
+			  try{
+				// Acquire the lineEmpty semaphore to wait for an empty spot in the line
+				lineEmpty.acquire();
+			  }catch(InterruptedException e){
+
+			  }
+			  try{
+				// Acquire the mutex to access the shared variable line and numFansInLine
+				mutex.acquire();
+				System.out.println(Thread.currentThread() + ": gets in line");
+	          	line.add(0, this);
+	           	numFansInLine++;
+			  }catch(InterruptedException e){
+
+			  }finally{
+				// Release the mutex and lineFull semaphores
+				mutex.release();
+				lineFull.release();
+			  }
+	          
 
 		}
 

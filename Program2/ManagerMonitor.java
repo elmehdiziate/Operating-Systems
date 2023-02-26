@@ -3,6 +3,7 @@ import java.util.Random;
 import java.util.ArrayList;
 
 class Manager {
+
     // Maximum time in between fan arrivals
     private static final int MAX_TIME_IN_BETWEEN_ARRIVALS = 3000;
 
@@ -24,14 +25,13 @@ class Manager {
     // The current number of fans in line
     private static int numFansInLine = 0;
 
-    // Monitor object for accessing shared variables
-    private static final Object monitor = new Object();
-
+    // For generating random times
     private Random rndGen = new Random(new Date().getTime());
     private Object rndLock = new Object();
 
     public static void main(String[] args) {
         new Manager().go();
+
     }
 
     private void go() {
@@ -60,110 +60,106 @@ class Manager {
         @Override
         public void run() {
             while (true) {
-                try {
-                    synchronized (monitor) {
-                        while (numFansInLine < MIN_FANS) {
-                            monitor.wait();
+
+                // Take picture with
+                synchronized (line) {
+                    if (numFansInLine < MIN_FANS) {
+                        try {
+                            line.wait();
+                            checkCelebrityOK();
+                        } catch (InterruptedException e) {
+                            e.getCause();
+                            System.exit(1);
                         }
                     }
+                }
 
-                    // Check to see if celebrity flips out
-                    checkCelebrityOK();
-
-                    // Take picture with fans
-                    System.out.println("Celebrity takes a picture with fans");
-
+                System.out.println("Celebrity takes a picture with fans");
+                synchronized (line) {
                     // Remove the fans from the line
-                    synchronized (monitor) {
-                        for (int i = 0; i < MIN_FANS; i++) {
-                            Fan fan = line.remove(0);
-                            System.out.println(fan.getName() + ": OMG! Thank you!");
-                        }
-                        numFansInLine -= MIN_FANS;
-                        monitor.notifyAll();
+                    for (int i = 0; i < MIN_FANS; i++) {
+                        System.out.println(line.remove(0).getName() + ": OMG! Thank you!");
                     }
+                    // Adjust the numFans variable
+                    numFansInLine -= MIN_FANS;
+                    line.notifyAll();
+                }
 
-                    // Take a break
-                    try {
-                        synchronized (rndLock) {
-                            int randomTime = rndGen.nextInt(MAX_BREAK_TIME);
-                            Thread.sleep(randomTime);
-                        };
-                    } catch (InterruptedException e) {
-                        System.err.println(e.toString());
-                        System.exit(1);
+                // Take a break
+                try {
+                    synchronized (rndLock) {
+                        int randomTime = rndGen.nextInt(MAX_BREAK_TIME);
+                        Thread.sleep(randomTime);
                     }
                 } catch (InterruptedException e) {
                     System.err.println(e.toString());
                     System.exit(1);
                 }
-
             }
 
         }
 
     }
 
-    public void checkCelebrityOK()
-	{
-		if (numFansInLine > MAX_ALLOWED_IN_QUEUE)
-		{
-			System.err.println("Celebrity becomes claustrophobic and flips out");
-			System.exit(1);
-		}
+    public synchronized void checkCelebrityOK() {
 
-		if (numFansInLine < MIN_FANS)
-		{
-			System.err.println("Celebrity becomes enraged that he was woken from nap for too few fans");
-			System.exit(1);
-		}
-	}
-  class Fan implements Runnable {
-    @Override
-    public void run() {
-        try {
-            // Random amount of time the fan will spend in the exhibit
-            int exhibitTime = rndGen.nextInt(MAX_EXHIBIT_TIME);
-            System.out.println(Thread.currentThread().getName() + " enters exhibit");
+        if (numFansInLine > MAX_ALLOWED_IN_QUEUE) {
+            System.err.println("Celebrity becomes claustrophobic and flips out");
+            System.exit(1);
+        }
 
-            // Wait for a spot in the photo line
-            synchronized (monitor) {
-                while (numFansInLine == MAX_ALLOWED_IN_QUEUE) {
-                    monitor.wait();
-                }
-                line.add(this);
-                numFansInLine++;
-                System.out.println(Thread.currentThread().getName() + " is now in line");
-
-                monitor.notifyAll();
-            }
-
-            // Wait for the celebrity to take a photo
-            synchronized (monitor) {
-                while (!line.contains(this)) {
-                    monitor.wait();
-                }
-
-                while (numFansInLine < MIN_FANS) {
-                    monitor.wait();
-                }
-
-                // Take photo
-                monitor.notifyAll();
-            }
-
-            // Leave exhibit
-            System.out.println(Thread.currentThread().getName() + " leaves exhibit after " + exhibitTime + "ms");
-        } catch (InterruptedException e) {
-            System.err.println(e.toString());
+        if (numFansInLine < MIN_FANS) {
+            System.err.println("Celebrity becomes enraged that he was woken from nap for too few fans");
             System.exit(1);
         }
 
     }
 
-    public String getName() {
-        return Thread.currentThread().getName();
-    }
+    class Fan implements Runnable {
+        String name;
 
-}
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public void run() {
+            // Set the thread name
+            name = Thread.currentThread().toString();
+
+            System.out.println(Thread.currentThread() + ": arrives");
+
+            // Look in the exhibit for a little while
+            try {
+                synchronized (rndLock) {
+                    int randomTime = rndGen.nextInt(MAX_EXHIBIT_TIME);
+                    Thread.sleep(randomTime);
+                }
+            } catch (InterruptedException e) {
+                System.err.println(e.toString());
+                System.exit(1);
+            }
+            synchronized (line) {
+                // Get in line
+                if (numFansInLine == MAX_ALLOWED_IN_QUEUE) {
+                    try {
+                        line.wait();
+                    } catch (InterruptedException e) {
+                        e.getCause();
+                        System.exit(1);
+                    }
+
+                }
+                System.out.println(Thread.currentThread() + ": gets in line");
+                line.add(0, this);
+                numFansInLine++;
+                if (numFansInLine >= MIN_FANS) {
+                    line.notify();
+                }
+
+            }
+
+        }
+
+    }
 }
