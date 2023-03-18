@@ -1,0 +1,181 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define FILE_PATH "samplePoint.txt" // default value
+#define NUMBER_PROCESSES 4     // default value
+int main(int argc, char *argv[])
+{
+
+    char file_path[100];
+    int number_processes;
+    // check if the number of arguments for different cases
+    // run with file_path given and number of processes given
+    if (argc == 3)
+    {
+        strcpy(file_path, argv[1]);
+        number_processes = atoi(argv[2]);
+    }
+    // run with only file_path given
+    else if (argc == 2)
+    {
+        strcpy(file_path, argv[1]);
+        number_processes = NUMBER_PROCESSES;
+    }
+    // run directly
+    else
+    {
+        strcpy(file_path, FILE_PATH);
+        number_processes = NUMBER_PROCESSES;
+    }
+
+    int total_points = 0;
+    int count = 0;
+    int total_points_in_circle = 0;
+    int n = 0;
+    int processed_points = 0;
+    FILE *points = fopen(file_path, "r");
+    float pts[100000][2];
+
+    // check if file is opened
+    if (points == NULL)
+    {
+        printf("Error: Unable to open file %s\n", file_path);
+        return 1;
+    }
+
+    // check if the format of the file is valid
+    if (fscanf(points, "%d", &total_points) != 1)
+    {
+        printf("Error: Invalid file format\n");
+        fclose(points);
+        return 1;
+    }
+    // Loop over the file and copy the points into an array
+    while (!feof(points))
+    {
+        // Check for the file format
+        if (fscanf(points, "%f %f", &pts[n][0], &pts[n][1]) != 2)
+        {
+            printf("Error: Invalid file format\n");
+            fclose(points);
+            return 1;
+        }
+        n++;
+    }
+
+    // Check if the number of lines is the same as the number of points provided
+    if (n != total_points)
+    {
+        printf("Error: Invalid file format\n");
+        return 1;
+    }
+
+    // Create unnamed pipe to communicate with the children
+    int pipefd[2];
+    if (pipe(pipefd) == -1)
+    {
+        printf("Error: Unable to create pipe\n");
+        fclose(points);
+        return 1;
+    }
+
+    // Create child processes
+    for (int i = 0; i < number_processes; i++)
+    {
+        // Create a child process using fork()
+        pid_t pid = fork();
+
+        // Check if there was an error in creating the child process
+        if (pid < 0)
+        {
+            printf("Error: Unable to create child process\n");
+            return 1;
+        }
+        // This block is executed by the child process
+        else if (pid == 0)
+        {
+            // Close the reading end of the pipe as the child process only writes to the pipe
+            close(pipefd[0]);
+
+            // Variables to store the x and y coordinates of each point
+            float x, y;
+            int process_points_in_circle = 0;
+
+            // Number of points to be processed by each process
+            int points_per_process = total_points / number_processes;
+            int reminder = total_points % number_processes;
+
+            // Index to start reading from the points array
+            int start = processed_points;
+
+            // Check if there is any left over points after dividing the total points between processes
+            if (i < reminder)
+            {
+                // Add an extra point to the points_per_process
+                points_per_process++;
+            }
+
+            // Loop through the points to be processed by this process
+            for (int j = start; j < start + points_per_process; j++)
+            {
+                x = pts[j][0];
+                y = pts[j][1];
+
+                // Check if the point lies inside the circle with radius 1
+                if (x * x + y * y <= 1)
+                {
+                    // Increment the count of points inside the circle
+                    process_points_in_circle++;
+                }
+            }
+
+            // Write the count of points inside the circle for this process to the pipe
+            write(pipefd[1], &process_points_in_circle,
+                  sizeof(process_points_in_circle));
+
+            // Close the writing end of the pipe
+            close(pipefd[1]);
+
+            // Exit the child process
+            return 0;
+        }
+        // This block is executed by the parent process
+        else
+        {
+            // Update the index to start reading from the points array for the next process
+            processed_points += total_points / number_processes;
+
+            // Check if there is any left over points after dividing the total points between processes
+            if (i < total_points % number_processes)
+            {
+                // Add an extra point to the processed points
+                processed_points++;
+            }
+        }
+    }
+
+    // The parent does not need the writing end of the pipe
+    close(pipefd[1]);
+    for (int i = 0; i < number_processes; i++)
+    {
+        wait(0);
+    }
+    for (int i = 0; i < number_processes; i++)
+    {
+        int process_points_in_circle;
+        read(pipefd[0], &process_points_in_circle,
+             sizeof(process_points_in_circle));
+        total_points_in_circle += process_points_in_circle;
+    }
+
+    close(pipefd[0]);
+
+    // Calculate and print approximation of pi
+    float pi = 4.0 * total_points_in_circle / total_points;
+    printf("Approximation of pi: %f\n", pi);
+    fclose(points);
+    return 0;
+}
