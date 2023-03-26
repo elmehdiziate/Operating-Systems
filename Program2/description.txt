@@ -4,17 +4,3 @@ picture, get their picture taken, and leave.  However, Chuck has some restrictio
 He takes naps in between pictures and refuses to be awoken until a minimum number of people are 
 ready for the group picture.  Also, if too many people are in line at a time, he gets claustrophobic and 
 freaks out.  If the line is full, the fans should wait in the exhibit area until a spot in line opens up.  
-You will write a program with synchronization to simulate this event.  You are given an unsynchronized version
-of the program, Manager.java.Download Manager.java.
-
-Put your java code in the prog2 package.
-
-Part 1:
-
-Write a program called ManagerSemaphore.java that uses Java Semaphores to do the synchronization.  You may not change any of the code in Manager.java, only add to it.  You may not use any other form of synchronization other than semaphores.
-
- 
-
-Part 2:
-
-Write a program called ManagerMonitor.java that uses Java monitors to do the synchronization.  You may not change any of the code in Manager.java, only add to it.  You may not use any other form of synchronization other than java monitors.
