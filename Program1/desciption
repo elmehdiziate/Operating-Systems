@@ -1,0 +1,5 @@
+The Monte Carlo method of approximating π is as follows:
+
+Given a circle centered at (0,0) with radius 1 and a square bounding the circle (with side length 2),
+generate random points that fall within the square.  π is approximately (4 x number of points in circle 
+/ total number of points), as the number of points approaches infinity.
