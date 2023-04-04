@@ -3,32 +3,37 @@
 #include <stdbool.h>
 #include <time.h>
 
-int * generate_reference_string(int range, int accesses){
-    int * reference_string =  malloc(sizeof(int) * accesses);
+int *generate_reference_string(int range, int accesses)
+{
+    int *reference_string = malloc(sizeof(int) * accesses);
     srand(time(NULL));
 
-    for(int i=0; i< accesses; i++){
+    for (int i = 0; i < accesses; i++)
+    {
         reference_string[i] = (rand() % range) + 1;
     }
     return reference_string;
 }
 
-int fifo(int* reference_string, int accesses, int num_frames){
+int fifo(int *reference_string, int accesses, int num_frames)
+{
 
-    printf("this is the number of frames: %d\n",num_frames);
+    printf("this is the number of frames: %d\n", num_frames);
     // initialize memory and page table
-    int *memory = (int *) calloc(num_frames, sizeof(int));
-    bool *page_table = (bool *) calloc(accesses, sizeof(bool));
+    int *memory = (int *)calloc(num_frames, sizeof(int));
+    bool *page_table = (bool *)calloc(accesses, sizeof(bool));
 
     // initialize variables for tracking stats
     int num_faults = 0;
     int oldest_page_index = 0;
 
-    for(int i=0; i<accesses ; i++){
+    for (int i = 0; i < accesses; i++)
+    {
         int page_number = reference_string[i];
 
         // check if page is already in memory
-        if(!page_table[page_number]){
+        if (!page_table[page_number])
+        {
             // page fault, replace oldest page
             int oldest_page_number = memory[oldest_page_index];
             page_table[oldest_page_number] = false;
@@ -38,37 +43,87 @@ int fifo(int* reference_string, int accesses, int num_frames){
             // update oldest page index
             oldest_page_index = (oldest_page_index + 1) % num_frames;
         }
-        
-
     }
     // free memory and page table
     free(memory);
     free(page_table);
     return num_faults;
 }
+int lru(int *reference_string, int accesses, int num_frames)
+{
+    int *memory = (int *)calloc(num_frames, sizeof(int));
+    int *last_used = (int *)calloc(num_frames, sizeof(int));
+    // initialize variables for tracking stats
+    int num_faults = 0;
+    for (int j = 0; j < num_frames; j++)
+    {
+        memory[j] = -1;
+        last_used[j] = -1;
+    }
 
-int main(int argc, char *argv[]){
+    for (int i = 0; i < accesses; i++)
+    {
+        int page_number = reference_string[i];
+        // check if page is already in memory
+        bool page_found = false;
+        for (int j = 0; j < num_frames; j++)
+        {
+            if (memory[j] == page_number)
+            {
+                page_found = true;
+                last_used[j] = i;
+                break;
+            }
+        }
+        if (!page_found)
+        {
+            int least_recent_page_index = 0;
+            int least_recent_page_last_used = last_used[0];
+            for (int j = 1; j < num_frames; j++)
+            {
+                if (last_used[j] < least_recent_page_last_used)
+                {
+                    least_recent_page_index = j;
+                    least_recent_page_last_used = last_used[j];
+                }
+            }
+            memory[least_recent_page_index] = page_number;
+            last_used[least_recent_page_index] = i;
+            num_faults++;
+        }
+    }
+    free(memory);
+    free(last_used);
+    return num_faults;
+}
+
+int main(int argc, char *argv[])
+{
     int f, x, NUM_ACCESSES, NUM_ITERATIONS;
-    if(argc != 5){
+    if (argc != 5)
+    {
         printf("Usage: %s <num_frames> <range_of_reference_string> <num_accesses> <num_iterations>\n", argv[0]);
         return 1;
     }
-    
+
     // parse command line arguments
     f = atoi(argv[1]);
     x = atoi(argv[2]);
     NUM_ACCESSES = atoi(argv[3]);
     NUM_ITERATIONS = atoi(argv[4]);
 
-    int* reference_string;
+    int *reference_string;
     int FIFO_total_faults = 0, FIFO_min_faults = 0, FIFO_max_faults = 0;
     int FIFO_plus_one_total_faults = 0, FIFO_plus_one_min_faults = NUM_ACCESSES, FIFO_plus_one_max_faults = 0, FIFO_plus_one_belady_count = 0;
     int FIFO_plus_two_total_faults = 0, FIFO_plus_two_min_faults = NUM_ACCESSES, FIFO_plus_two_max_faults = 0, FIFO_plus_two_belady_count = 0;
+    int LRU_total_faults = 0, LRU_min_faults = NUM_ACCESSES, LRU_max_faults = 0;
     // generate a random reference string
-    for(int i=0; i<NUM_ITERATIONS; i++ ){
+    for (int i = 0; i < NUM_ITERATIONS; i++)
+    {
         reference_string = generate_reference_string(x, NUM_ACCESSES);
-        for(int i=0; i<NUM_ACCESSES; i++){
-            printf("%d-%d\t",i+1,reference_string[i]);
+        for (int i = 0; i < NUM_ACCESSES; i++)
+        {
+            printf("%d-%d\t", i + 1, reference_string[i]);
         }
         printf("\n");
 
@@ -82,7 +137,7 @@ int main(int argc, char *argv[]){
             FIFO_max_faults = fifo_faults;
         }
 
-        // run fifo for number of frames + 1 
+        // run fifo for number of frames + 1
         int fifo_faults_1 = fifo(reference_string, NUM_ACCESSES, f+1);
         FIFO_plus_one_total_faults += fifo_faults_1;
         if(FIFO_plus_one_min_faults > fifo_faults_1){
@@ -114,10 +169,13 @@ int main(int argc, char *argv[]){
             FIFO_plus_two_belady_count++;
         }
 
-        
-
+        // run lru for number of frames
+        int LRU_faults = lru(reference_string, NUM_ACCESSES, f);
+        if(LRU_min_faults > LRU_faults){
+            LRU_min_faults = LRU_faults;
+        }
+        if(LRU_max_faults < LRU_faults){
+            LRU_max_faults = LRU_faults;
+        }
     }
-    printf("%d\n",FIFO_plus_one_belady_count);
-    printf("%d\n",FIFO_plus_two_belady_count);
-
 }
