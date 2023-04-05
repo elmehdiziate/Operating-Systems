@@ -221,7 +221,7 @@ class MemoryManager {
             }
         }
         if (!foundBlock) {
-            System.out.println("Item " + id + " is not in memory. Failed to fre the block.");
+            System.out.println("Item " + id + " is not in memory. Failed to free the block.");
         }
     }
 }
