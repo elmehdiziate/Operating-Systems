@@ -97,6 +97,10 @@ class MemoryManager {
     }
 
     public static void main(String args[]) {
+        if(args.length != 1){
+            System.out.println("Usage: <file> <Memoery_size>");
+            System.exit(1);
+        }
         int memsize = Integer.parseInt(args[0]);
 
         MemoryManager M = new MemoryManager(memsize);
