@@ -180,4 +180,6 @@ int main(int argc, char *argv[])
         }
     }
     printf("\n%d \t %d",FIFO_plus_one_belady_count,FIFO_plus_two_belady_count);
+
+    printf("hello world");
 }
