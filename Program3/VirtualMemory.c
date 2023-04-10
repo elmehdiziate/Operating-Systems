@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
     int *reference_string;
-    int FIFO_total_faults = 0, FIFO_min_faults = 0, FIFO_max_faults = 0;
+    int FIFO_total_faults = 0, FIFO_min_faults = NUM_ACCESSES, FIFO_max_faults = 0;
     int FIFO_plus_one_total_faults = 0, FIFO_plus_one_min_faults = NUM_ACCESSES, FIFO_plus_one_max_faults = 0, FIFO_plus_one_belady_count = 0;
     int FIFO_plus_two_total_faults = 0, FIFO_plus_two_min_faults = NUM_ACCESSES, FIFO_plus_two_max_faults = 0, FIFO_plus_two_belady_count = 0;
     int LRU_total_faults = 0, LRU_min_faults = NUM_ACCESSES, LRU_max_faults = 0;
@@ -120,66 +120,87 @@ int main(int argc, char *argv[])
     for (int i = 0; i < NUM_ITERATIONS; i++)
     {
         reference_string = generate_reference_string(x, NUM_ACCESSES);
-        // for (int i = 0; i < NUM_ACCESSES; i++)
-        // {
-        //     printf("%d, ", reference_string[i]);
-        // }
-        // printf("\n");
-
-
+        
         // run fifo for number of frames
         int fifo_faults = fifo(reference_string, NUM_ACCESSES, f);
-        printf("fifo_faults: %d\n",fifo_faults);
         FIFO_total_faults += fifo_faults;
-        if(FIFO_min_faults > fifo_faults){
+        if (FIFO_min_faults > fifo_faults)
+        {
             FIFO_min_faults = fifo_faults;
         }
-        if(FIFO_max_faults < fifo_faults){
+        if (FIFO_max_faults < fifo_faults)
+        {
             FIFO_max_faults = fifo_faults;
         }
 
         // run fifo for number of frames + 1
-        int fifo_faults_1 = fifo(reference_string, NUM_ACCESSES, f+1);
-        printf("fifo_faults_1 : %d\n",fifo_faults_1);
+        int fifo_faults_1 = fifo(reference_string, NUM_ACCESSES, f + 1);
         FIFO_plus_one_total_faults += fifo_faults_1;
-        if(FIFO_plus_one_min_faults > fifo_faults_1){
+        if (FIFO_plus_one_min_faults > fifo_faults_1)
+        {
             FIFO_plus_one_min_faults = fifo_faults_1;
         }
-        if(FIFO_plus_one_max_faults < fifo_faults_1){
+        if (FIFO_plus_one_max_faults < fifo_faults_1)
+        {
             FIFO_plus_one_min_faults = fifo_faults_1;
         }
 
         // check for Belady's Anomaly
-        if(fifo_faults < fifo_faults_1){
+        if (fifo_faults < fifo_faults_1)
+        {
             FIFO_plus_one_belady_count++;
         }
 
         // run fifo for number of frames + 2
-        int fifo_faults_2 = fifo(reference_string, NUM_ACCESSES, f+2);
-        printf("fifo_faults_2: %d\n",fifo_faults_2);
-        FIFO_plus_one_total_faults += fifo_faults_2;
-        if(FIFO_plus_two_min_faults > fifo_faults_2){
+        int fifo_faults_2 = fifo(reference_string, NUM_ACCESSES, f + 2);
+        FIFO_plus_two_total_faults += fifo_faults_2;
+        if (FIFO_plus_two_min_faults > fifo_faults_2)
+        {
             FIFO_plus_two_min_faults = fifo_faults_2;
         }
-        if(FIFO_plus_two_max_faults < fifo_faults_1){
+        if (FIFO_plus_two_max_faults < fifo_faults_1)
+        {
             FIFO_plus_two_max_faults = fifo_faults_2;
         }
 
         // check for Belady's Anomaly
-        if(fifo_faults < fifo_faults_2){
+        if (fifo_faults < fifo_faults_2)
+        {
             FIFO_plus_two_belady_count++;
         }
 
         // run lru for number of frames
         int LRU_faults = lru(reference_string, NUM_ACCESSES, f);
-        if(LRU_min_faults > LRU_faults){
+        LRU_total_faults += LRU_faults;
+        if (LRU_min_faults > LRU_faults)
+        {
             LRU_min_faults = LRU_faults;
         }
-        if(LRU_max_faults < LRU_faults){
+        if (LRU_max_faults < LRU_faults)
+        {
             LRU_max_faults = LRU_faults;
         }
     }
-    printf("\n%d \t %d",FIFO_plus_one_belady_count,FIFO_plus_two_belady_count);
+    // Calculate averages and percentages
+    double FIFO_avg_faults = (double)FIFO_total_faults / NUM_ITERATIONS;
+    double FIFO_plus_one_avg_faults = (double)FIFO_plus_one_total_faults / NUM_ITERATIONS;
+    double FIFO_plus_two_avg_faults = (double)FIFO_plus_two_total_faults / NUM_ITERATIONS;
+    double LRU_avg_faults = (double)LRU_total_faults / NUM_ITERATIONS;
 
-    
+    double FIFO_plus_one_belady_percentage = (double)FIFO_plus_one_belady_count / NUM_ITERATIONS * 100;
+    double FIFO_plus_two_belady_percentage = (double)FIFO_plus_two_belady_count / NUM_ITERATIONS * 100;
+
+    // Print the stats
+    printf("%d frames, %d of accesses, %d of iterations\n",f,NUM_ACCESSES,NUM_ITERATIONS);
+    printf("FIFO :\tAverage faults\tMin faults\tMax faults\n", f);
+    printf("\t\t%.2f\t\t%d\t\t%d\n", FIFO_avg_faults, FIFO_min_faults, FIFO_max_faults);
+
+    printf("FIFO + 1:\tAverage faults\tMin faults\tMax faults\t# of Belady\t%% of Belady\n");
+    printf("\t\t%.2f\t\t%d\t\t%d\t\t%d\t\t%.5f\n", FIFO_plus_one_avg_faults, FIFO_plus_one_min_faults, FIFO_plus_one_max_faults, FIFO_plus_one_belady_count, FIFO_plus_one_belady_percentage);
+
+    printf("FIFO + 2:\tAverage faults\tMin faults\tMax faults\t# of Belady\t%% of Belady\n", f);
+    printf("\t\t%.2f\t\t%d\t\t%d\t\t%d\t\t%.5f\n", FIFO_plus_two_avg_faults, FIFO_plus_two_min_faults, FIFO_plus_two_max_faults, FIFO_plus_two_belady_count, FIFO_plus_two_belady_percentage);
+
+    printf("LRU:\t\tAverage faults\tMin faults\tMax faults\n");
+    printf("\t\t%.2f\t\t%d\t\t%d\n", LRU_avg_faults, LRU_min_faults, LRU_max_faults);
 }
