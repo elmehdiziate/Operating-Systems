@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         }
         if (FIFO_plus_one_max_faults < fifo_faults_1)
         {
-            FIFO_plus_one_min_faults = fifo_faults_1;
+            FIFO_plus_one_max_faults = fifo_faults_1;
         }
 
         // check for Belady's Anomaly
