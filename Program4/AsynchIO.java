@@ -11,5 +11,32 @@ public class AsynchIO {
 
     public static void main(String args[]){
 
+        if(args.length != 1){
+            System.out.println("Usage: java AsynchIO <input filename>");
+            System.exit(1);
+        }
+
+        FileHandler Fh;
+        try{
+            Fh = new FileHandler("aio.log");
+            logger.addHandler(Fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            Fh.setFormatter(formatter);
+        }catch(IOException e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        Path inputPath = Paths.get(args[0]);
+        
+        try(BufferedReader reader = Files.newBufferedReader(inputPath, StandardCharsets.US_ASCII)){
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }catch(IOException e){
+
+        }
+
     }
 }
