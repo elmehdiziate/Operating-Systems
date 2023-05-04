@@ -9,3 +9,18 @@
 
 ### ThreadedMonteCarlo.java
 - This is a java program that uses multithreading (using the Thread class in Java that is inherited by all objects by default). Since threads are sharing the same process (parent) they are by default sharing the memory, which will allow the threads to access the points list and number of points variable in an asynchronized way which causes race conditions. To solve that, a synchronized keyword was added to the block incrementing then number of points variable to allow mutual exclusion.
+
+## Program2
+
+### Overall
+- This is a simulation of celebrity manager using Java, where fans arrive, view an exhibit, wait in line for a picture, and then leave. The celebrity, Chuck Hardabs, has specific restrictions: he naps between pictures and needs a minimum number of fans in line before waking up. If too many fans are in line, he gets claustrophobic. Fans should wait in the exhibit area if the line is full.
+### ManagerSemaphore.java
+- A program that uses Java Semaphores for synchronization. 
+### ManagerMonitor.java
+- a program that uses Java Monitors for synchronization
+### Tools to check race conditions existence:
+- For both programs, you can use DRD to test for race conditions. It is available at https://opensource.devexperts.com/display/DRD/Links to an external site.
+
+
+## Program3
+
