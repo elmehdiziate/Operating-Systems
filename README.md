@@ -138,4 +138,42 @@ Locality of reference is a property of certain access patterns where memory acce
 - Increasing the number of iterations helps in obtaining a more accurate and consistent understanding of the performance of the FIFO algorithm and the occurrence of Belady's Anomaly under the given workload and access patterns. However, the actual performance of FIFO and the occurrence of Belady's Anomaly are more influenced by the number of frames, the access patterns, and the size of the working set. 
 - Finally, while both algorithms have their advantages and disadvantages, LRU typically provides better performance in terms of minimizing page faults, which translates to improved average access times in memory management systems. However, it's important to note that the specific workload and access patterns can significantly impact the performance of both algorithms, and in some cases, FIFO might perform better. 
 
+## Program 4
+
+- We all grew up with our mother assuring us that a file is just a long sequence of contiguous bytes. We were assured this was true because the file I/O we were taught as children presented files as byte streams. Santa, the tooth fairy, Cupid, and now file streams are all exposed as frauds. Now we know the truth: files are really just blocks, and the blocks aren’t even necessarily adjacent. Innocence lost.
+- An approach to I/O that more closely matches the actual system: Asynchronous I/O. In this approach, I/O operations are initiated with a request that is queued until it can be processed, at which time the data is read/written to/from a buffer, and a completion signal is sent.
+- The system should take as input a series of read operations from an input file (see below) and execute the reads using Asynchronous I/O.
+- Each valid read operation results in a record written to the console, giving the result of the operation (or an error log entry).
+- Input file is encoded in ASCII as follows:
+
+                <opid><sp><file path><sp><byte offset><sp><byte count>\n
+
+- ASCII, Encoding, and Meaning
+
+                Encoding	Meaning
+                <opid>	[0-9]+	Numeric (non-negative, integer) operation ID
+                <sp>	Single space	Single space
+                <file path>	Any legal file path	Path to file to read
+                <byte offset>	[0-9]+	Numeric (non-negative, integer) offset from file beginning to first byte to read
+                <byte count>	[0-9]+	Numeric (non-negative, integer) number of bytes to read from offset
+                Note: The operation IDs in a file need not be unique.
+
+- Example Input File
+The file consists only of printable characters that are encoded in ASCII.
+
+                0 data1 0 4
+
+                1 dir1/data2 5 2
+
+- Console Output
+                <opid><sp><char1><char 2>…<char N><eoln>
+                 …
+
+                where <char i> is the ith read byte encoded as an ASCII character and <eoln> is the default end-of-line sequence.
+
+- Example console output
+The console output consists only of only printable characters encoded in the default character encoding.
+
+                1 45<eoln>
+                0 CDEF<eoln>
                       
