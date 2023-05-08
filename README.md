@@ -53,3 +53,89 @@ Bytes:
  
 
 - Finally, the user can f(ree) an item with the following command: f(ree). This will return a message for success if the block is freed and a message for failure if the item was not in memory. 
+
+### VirtualMemory.c
+
+#### Overall
+- The program will take four ints as command line parameters:
+      - A number of frames f
+      - A range of a reference string x
+      - NUM_ACCESSES- the length of the reference string
+      - NUM_ITERATIONS
+- The frames will be the number of frames in the virtual memory and the reference string will generate values from 1 to x to put in your frames.
+- For some NUM_ACCESSES and NUM_ITERATIONS, a random int value from 1 to x is generated to be placed in the virtual memory frames. 
+- this is repeated NUM_ACCESSES times. 
+- FIFO is used on virtual memory of frames size f, f + 1, f + 2, and LRU is used with virtual memory of frames size f. 
+- Then  the virtual memory is cleared and the same process is repeated NUM_ITERATIONS times. 
+- Over the course of the iterations,  the average number of page faults os tracked for each of these four methods as well as a minimum and maximum number of page faults over all iterations for each method. 
+- It may occur that for a particular iteration, having more frames actually increases the number of pages faults.  This is called Belady’s Anomaly. The number of times Belady’s Anomaly appears for frames size f + 1 and f + 2 is tracked too.  F +1 is compared to F, and F + 2 is compared to F.
+- When all iterations are done,  a report the following stats using this header format:
+                      number of frames, numbe of accesses, number of iterations
+                      FIFO f:	Average faults	Min faults	Max faults		
+                      FIFO f + 1:	Average faults	Min faults	Max faults	# of Belady	% of Belady
+                      FIFO f + 2: 	Average faults	Min faults	Max faults	# of Belady	% of Belady
+                      LRU:	Average faults	Min faults	Max faults	
+#### Analysis
+- To answer the questions regarding which algorithm gives the best performance and how FIFO compares to LRU, I runed my code using different ranges for the reference string, different numbers of page accesses, and different numbers of frames: 
+    -	Low range, low accesses, low frames 
+      ![image](https://user-images.githubusercontent.com/109172506/236867554-c295f64a-27a1-45e4-92bf-c371ed83ecfc.png)
+
+    -	Low range, high accesses, low frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867594-7628d84a-d060-4816-be81-eaa870c75fbb.png)
+
+    -	High range, low accesses, low frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867625-798cc20e-fcfd-416b-85e0-07a0810464a0.png)
+
+    -	High range, high accesses, low frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867716-95e2d291-a3e4-4342-9374-2311cd1d172d.png)
+
+    -	Low range, low accesses, high frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867763-4c275c05-6e18-414e-8e0c-35298510c5c1.png)
+
+    -	Low range, high accesses, high frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867789-5ece4eff-44c3-4fc7-b0d3-cf680d7b60ea.png)
+
+    -	High range, low accesses, high frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867823-0025b549-4f28-48d6-ae31-d2abe1a8f40b.png)
+
+    -	High range, high accesses, high frames: 
+      ![image](https://user-images.githubusercontent.com/109172506/236867858-9ae4879e-3a51-4af2-a243-92e322353bea.png)
+
+
+    -	Medium accesses, high range, high number of iterations, medium frames 
+      ![image](https://user-images.githubusercontent.com/109172506/236867889-10fd62df-85d5-4a43-8c39-86cf61cba1e8.png)
+
+- In the provided examples, LRU (Least Recently Used) generally performs slightly better than or equal to FIFO (First In First Out). The primary metric used to make this determination is the average number of page faults. A lower number of page faults indicates better performance. Here's a summary of the average faults for FIFO and LRU in each scenario: 
+ 
+      2 frames, 50 accesses, 1000 iterations: 
+          FIFO: 30.54 
+          LRU: 30.52 (slightly better performance) 
+      2 frames, 500 accesses, 1000 iterations: 
+          FIFO: 301.01 
+          LRU: 300.80 (slightly better performance) 
+      2 frames, 500 accesses, 1000 iterations (high range, high accesses, low frames): 
+          FIFO: 480.20 
+          LRU: 480.20 (equal performance) 
+      2 frames, 50 accesses, 1000 iterations (low range, low accesses, high frames): 
+          FIFO: 48.06 
+          LRU: 48.05 (slightly better performance) 
+      10 frames, 500 accesses, 1000 iterations (high range, high accesses, high frames): 
+          FIFO: 5.00 
+          LRU: 5.00 (equal performance) 
+      10 frames, 50 accesses, 1000 iterations (low range, low accesses, medium frames): 
+          FIFO: 41.18 
+          LRU: 41.16 (slightly better performance) 
+      10 frames, 500 accesses, 1000 iterations (high range, high accesses, medium frames): 
+          FIFO: 401.43 
+          LRU: 401.62 (slightly worse performance) 
+         
+     ![image](https://user-images.githubusercontent.com/109172506/236868464-a5f57125-3d45-4709-a884-ba1601d4ae0c.png)
+      This is a small graph plotted using R. As we can see Fifo and LRU lines are Coincident Lines which show the small difference in this examples. 
+- In most cases, LRU performs slightly better or equal to FIFO. LRU works better because it keeps track of the most recently used pages and prioritizes replacing the least recently used pages. This strategy generally reduces the number of page faults as it is more likely that the least recently used pages are not needed again in the near future. On the other hand, FIFO simply replaces the oldest page without considering its recent usage, which can sometimes lead to more page faults if the oldest page is still in use. 
+- The performance of these algorithms can also be influenced by the nature of the reference strings. In the provided example, the reference strings are generated randomly, which may not produce more diverse or complex access patterns. In a real-world scenario, access patterns might be more varied and exhibit locality of reference, which could affect the performance of the algorithms differently. 
+Locality of reference is a property of certain access patterns where memory accesses are clustered around specific locations. When there is a strong locality of reference, LRU usually performs better than FIFO because LRU can capture the working set of recently used pages more effectively. However, in the case of random reference strings, the access patterns might not show such locality, making the performance of LRU and FIFO more similar. 
+- In brief, increasing the number of iterations in a simulation tends to have little direct impact on the occurrence of Belady's Anomaly or the performance of the FIFO algorithm. This is because the number of iterations mostly affects the statistical confidence of the results rather than the behavior of the algorithms themselves. 
+- Increasing the number of iterations helps in obtaining a more accurate and consistent understanding of the performance of the FIFO algorithm and the occurrence of Belady's Anomaly under the given workload and access patterns. However, the actual performance of FIFO and the occurrence of Belady's Anomaly are more influenced by the number of frames, the access patterns, and the size of the working set. 
+- Finally, while both algorithms have their advantages and disadvantages, LRU typically provides better performance in terms of minimizing page faults, which translates to improved average access times in memory management systems. However, it's important to note that the specific workload and access patterns can significantly impact the performance of both algorithms, and in some cases, FIFO might perform better. 
+
+                      
