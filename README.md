@@ -24,3 +24,32 @@
 
 ## Program3
 
+### MemoryManager.java
+
+- A variable-partition memory management system called MemoryManager.java. 
+
+- It takes as a command line argument an int, which is the size of your memory in (imaginary) bytes.  Users can then use the console to add items to memory with the following command: a(dd), where id is an int for the id of the item, size is an int for the size of the item, and method is one of f(irst fit), b(est fit), or w(orst fit). 
+- For example, a 2 10 b adds item 2 of size 10 using best fit.   For uniformity, start your byte range at 1, not 0.
+- The user can also press q(uit) or d(isplay). 
+- Display output the contents of your memory in the following format:
+Bytes:
+
+                      1-3       Free
+
+                      4-10      Item 3
+
+                      11-12      Free
+
+                      13-20      Item 1
+
+                      21        Free
+
+                      22-23      Item 4
+
+                      24-30      Item 2
+
+                      31-100     Free
+
+ 
+
+- Finally, the user can f(ree) an item with the following command: f(ree). This will return a message for success if the block is freed and a message for failure if the item was not in memory. 
